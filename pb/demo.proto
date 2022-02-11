@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package ire.restgwdemo.v1;
+option go_package = "ire.com/restgwdemo/v1/pb";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service Demo {
+	rpc UnaryDemo(Request) returns (Response) {
+		option (google.api.http) = {
+			post: "/v1/unarydemo"
+			body: "*"
+		};
+	}
+  
+  rpc BulkUpload(stream Request) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			post: "/v1/bulkupload"
+			body: "*"
+		};
+  }
+  
+	rpc BulkDownload(Request) returns (stream Response) {
+		option (google.api.http) = {
+			post: "/v1/bulkdownload"
+			body: "*"
+		};
+  }
+  
+  rpc DoubleStream(stream Request) returns (stream Response) {
+		option (google.api.http) = {
+			post: "/v1/doublestream"
+			body: "*"
+		};
+  }  
+}
+
+message Request {
+	string inMsg = 1;
+}
+
+message Response {
+	string outMsg = 1;
+}
