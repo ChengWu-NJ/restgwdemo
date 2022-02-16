@@ -25,7 +25,12 @@ func Run(ctx context.Context, network, address string) error {
 	}()
 
 	s := grpc.NewServer()
-	pb.RegisterDemoServer(s, newDemoServer(ctx))
+	ds, err := newDemoServer(ctx)
+	if err != nil {
+		return err
+	}
+
+	pb.RegisterDemoServer(s, ds)
 
 	go func() {
 		defer s.GracefulStop()
@@ -33,33 +38,3 @@ func Run(ctx context.Context, network, address string) error {
 	}()
 	return s.Serve(l)
 }
-
-/*
-func RunInProcessGateway(ctx context.Context, addr string, opts ...runtime.ServeMuxOption) error {
-	mux := runtime.NewServeMux(opts...)
-
-	if err := pb.RegisterDemoHandlerServer(ctx, mux, newDemoServer(ctx)); err != nil {
-		return err
-	}
-
-	s := &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
-
-	go func() {
-		<-ctx.Done()
-		slog.Infof("Shutting down the http gateway server")
-		if err := s.Shutdown(context.Background()); err != nil {
-			slog.Errorf("Failed to shutdown http gateway server: %v", err)
-		}
-	}()
-
-	if err := s.ListenAndServe(); err != http.ErrServerClosed {
-		slog.Errorf("Failed to listen and serve: %v", err)
-		return err
-	}
-	return nil
-
-}
-*/

@@ -23,10 +23,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DemoClient interface {
-	UnaryDemo(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
-	BulkUpload(ctx context.Context, opts ...grpc.CallOption) (Demo_BulkUploadClient, error)
-	BulkDownload(ctx context.Context, in *Request, opts ...grpc.CallOption) (Demo_BulkDownloadClient, error)
-	DoubleStream(ctx context.Context, opts ...grpc.CallOption) (Demo_DoubleStreamClient, error)
+	// EnableStorNode is idempotent that means two cases:
+	// 1. update it if exists
+	// 2. oterwise create(/insert) it
+	EnableStorNode(ctx context.Context, in *EnableStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type demoClient struct {
@@ -37,120 +37,23 @@ func NewDemoClient(cc grpc.ClientConnInterface) DemoClient {
 	return &demoClient{cc}
 }
 
-func (c *demoClient) UnaryDemo(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/UnaryDemo", in, out, opts...)
+func (c *demoClient) EnableStorNode(ctx context.Context, in *EnableStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/EnableStorNode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *demoClient) BulkUpload(ctx context.Context, opts ...grpc.CallOption) (Demo_BulkUploadClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Demo_ServiceDesc.Streams[0], "/ire.restgwdemo.v1.Demo/BulkUpload", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &demoBulkUploadClient{stream}
-	return x, nil
-}
-
-type Demo_BulkUploadClient interface {
-	Send(*Request) error
-	CloseAndRecv() (*emptypb.Empty, error)
-	grpc.ClientStream
-}
-
-type demoBulkUploadClient struct {
-	grpc.ClientStream
-}
-
-func (x *demoBulkUploadClient) Send(m *Request) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *demoBulkUploadClient) CloseAndRecv() (*emptypb.Empty, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(emptypb.Empty)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *demoClient) BulkDownload(ctx context.Context, in *Request, opts ...grpc.CallOption) (Demo_BulkDownloadClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Demo_ServiceDesc.Streams[1], "/ire.restgwdemo.v1.Demo/BulkDownload", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &demoBulkDownloadClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Demo_BulkDownloadClient interface {
-	Recv() (*Response, error)
-	grpc.ClientStream
-}
-
-type demoBulkDownloadClient struct {
-	grpc.ClientStream
-}
-
-func (x *demoBulkDownloadClient) Recv() (*Response, error) {
-	m := new(Response)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *demoClient) DoubleStream(ctx context.Context, opts ...grpc.CallOption) (Demo_DoubleStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Demo_ServiceDesc.Streams[2], "/ire.restgwdemo.v1.Demo/DoubleStream", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &demoDoubleStreamClient{stream}
-	return x, nil
-}
-
-type Demo_DoubleStreamClient interface {
-	Send(*Request) error
-	Recv() (*Response, error)
-	grpc.ClientStream
-}
-
-type demoDoubleStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *demoDoubleStreamClient) Send(m *Request) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *demoDoubleStreamClient) Recv() (*Response, error) {
-	m := new(Response)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 // DemoServer is the server API for Demo service.
 // All implementations must embed UnimplementedDemoServer
 // for forward compatibility
 type DemoServer interface {
-	UnaryDemo(context.Context, *Request) (*Response, error)
-	BulkUpload(Demo_BulkUploadServer) error
-	BulkDownload(*Request, Demo_BulkDownloadServer) error
-	DoubleStream(Demo_DoubleStreamServer) error
+	// EnableStorNode is idempotent that means two cases:
+	// 1. update it if exists
+	// 2. oterwise create(/insert) it
+	EnableStorNode(context.Context, *EnableStorNodeRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedDemoServer()
 }
 
@@ -158,17 +61,8 @@ type DemoServer interface {
 type UnimplementedDemoServer struct {
 }
 
-func (UnimplementedDemoServer) UnaryDemo(context.Context, *Request) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnaryDemo not implemented")
-}
-func (UnimplementedDemoServer) BulkUpload(Demo_BulkUploadServer) error {
-	return status.Errorf(codes.Unimplemented, "method BulkUpload not implemented")
-}
-func (UnimplementedDemoServer) BulkDownload(*Request, Demo_BulkDownloadServer) error {
-	return status.Errorf(codes.Unimplemented, "method BulkDownload not implemented")
-}
-func (UnimplementedDemoServer) DoubleStream(Demo_DoubleStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method DoubleStream not implemented")
+func (UnimplementedDemoServer) EnableStorNode(context.Context, *EnableStorNodeRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableStorNode not implemented")
 }
 func (UnimplementedDemoServer) mustEmbedUnimplementedDemoServer() {}
 
@@ -183,95 +77,22 @@ func RegisterDemoServer(s grpc.ServiceRegistrar, srv DemoServer) {
 	s.RegisterService(&Demo_ServiceDesc, srv)
 }
 
-func _Demo_UnaryDemo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+func _Demo_EnableStorNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnableStorNodeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DemoServer).UnaryDemo(ctx, in)
+		return srv.(DemoServer).EnableStorNode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ire.restgwdemo.v1.Demo/UnaryDemo",
+		FullMethod: "/ire.restgwdemo.v1.Demo/EnableStorNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DemoServer).UnaryDemo(ctx, req.(*Request))
+		return srv.(DemoServer).EnableStorNode(ctx, req.(*EnableStorNodeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
-}
-
-func _Demo_BulkUpload_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(DemoServer).BulkUpload(&demoBulkUploadServer{stream})
-}
-
-type Demo_BulkUploadServer interface {
-	SendAndClose(*emptypb.Empty) error
-	Recv() (*Request, error)
-	grpc.ServerStream
-}
-
-type demoBulkUploadServer struct {
-	grpc.ServerStream
-}
-
-func (x *demoBulkUploadServer) SendAndClose(m *emptypb.Empty) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *demoBulkUploadServer) Recv() (*Request, error) {
-	m := new(Request)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func _Demo_BulkDownload_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Request)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(DemoServer).BulkDownload(m, &demoBulkDownloadServer{stream})
-}
-
-type Demo_BulkDownloadServer interface {
-	Send(*Response) error
-	grpc.ServerStream
-}
-
-type demoBulkDownloadServer struct {
-	grpc.ServerStream
-}
-
-func (x *demoBulkDownloadServer) Send(m *Response) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _Demo_DoubleStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(DemoServer).DoubleStream(&demoDoubleStreamServer{stream})
-}
-
-type Demo_DoubleStreamServer interface {
-	Send(*Response) error
-	Recv() (*Request, error)
-	grpc.ServerStream
-}
-
-type demoDoubleStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *demoDoubleStreamServer) Send(m *Response) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *demoDoubleStreamServer) Recv() (*Request, error) {
-	m := new(Request)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
 }
 
 // Demo_ServiceDesc is the grpc.ServiceDesc for Demo service.
@@ -282,27 +103,10 @@ var Demo_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DemoServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "UnaryDemo",
-			Handler:    _Demo_UnaryDemo_Handler,
+			MethodName: "EnableStorNode",
+			Handler:    _Demo_EnableStorNode_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "BulkUpload",
-			Handler:       _Demo_BulkUpload_Handler,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "BulkDownload",
-			Handler:       _Demo_BulkDownload_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "DoubleStream",
-			Handler:       _Demo_DoubleStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "demo.proto",
 }

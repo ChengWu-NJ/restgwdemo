@@ -2,9 +2,11 @@ package grpcsvc
 
 import (
 	"context"
-	"fmt"
-	"io"
+	"time"
 
+	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/orm"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"ire.com/restgwdemo/pb"
 	"ire.com/slog"
 )
@@ -14,22 +16,70 @@ import (
 type demoServer struct {
 	ctx context.Context
 	pb.DemoServer
+
+	DB *pg.DB
 }
 
-func newDemoServer(ctx context.Context) pb.DemoServer {
+func newDemoServer(ctx context.Context) (pb.DemoServer, error) {
+	db := pg.Connect(&pg.Options{
+		User:                  "postgres",
+		Password:              "4y7sV96vA9wv46VR",
+		Database:              "postgres",
+		Addr:                  `localhost:5432`,
+		RetryStatementTimeout: true,
+		MaxRetries:            4,
+		MinRetryBackoff:       250 * time.Millisecond,
+	})
+
+	defer func() {
+		<-ctx.Done()
+
+		db.Close()
+	}()
+
+	if err := _creatTables(db); err != nil {
+		return nil, err
+	}
+
 	return &demoServer{
 		ctx: ctx,
-	}
+		DB:  db,
+	}, nil
 }
 
-func (s *demoServer) UnaryDemo(ctx context.Context, req *pb.Request) (*pb.Response, error) {
-	if req == nil || req.InMsg == "" {
-		return nil, fmt.Errorf(`got an requset with empty message`)
+func _creatTables(db *pg.DB) error {
+	if err := db.CreateTable(&pb.StorNode{}, &orm.CreateTableOptions{IfNotExists: true}); err != nil {
+		return err
 	}
+	//TODO: create others ...
 
-	return &pb.Response{OutMsg: fmt.Sprintf(`I got your message:[%s]`, req.InMsg)}, nil
+	return nil
 }
 
+func (s *demoServer) EnableStorNode(ctx context.Context, req *pb.EnableStorNodeRequest) (
+	*emptypb.Empty, error) {
+
+	//name is unique, so there is just one
+	if r, err := s.DB.QueryOne(&pb.StorNode{}, `select * from stor_nodes where name = ?`,
+		req.StorNode.Name); err != nil {
+
+		//there is none, do insert
+		if r.RowsAffected() == -1 {
+			slog.Debug(`do insert...`)
+
+			//2. oterwise create(/insert) it
+			return nil, s.DB.Insert(req.StorNode)
+		}
+
+		//there is multiple records
+		return nil, err
+	}
+
+	//1. update it if exists
+	return nil, s.DB.Update(req.StorNode)
+}
+
+/*
 func (s *demoServer) BulkUpload(stream pb.Demo_BulkUploadServer) error {
 	ctx := stream.Context()
 
@@ -126,3 +176,4 @@ func (s *demoServer) DoubleStream(stream pb.Demo_DoubleStreamServer) error {
 
 	return nil
 }
+*/

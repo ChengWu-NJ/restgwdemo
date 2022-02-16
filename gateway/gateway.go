@@ -46,6 +46,8 @@ func Run(ctx context.Context, opts Options) error {
 	if err != nil {
 		return err
 	}
+	slog.Debugf(`conn.GetState() == %s`, conn.GetState())
+
 	go func() {
 		<-ctx.Done()
 		if err := conn.Close(); err != nil {
@@ -129,7 +131,7 @@ func dialUnix(ctx context.Context, addr string) (*grpc.ClientConn, error) {
 func healthzServer(conn *grpc.ClientConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
-		if s := conn.GetState(); s != connectivity.Ready {
+		if s := conn.GetState(); s != connectivity.Ready && s != connectivity.Idle {
 			http.Error(w, fmt.Sprintf("grpc server is %s", s), http.StatusBadGateway)
 			return
 		}

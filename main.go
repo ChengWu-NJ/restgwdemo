@@ -8,6 +8,7 @@ import (
 	"ire.com/restgwdemo/gateway"
 	"ire.com/restgwdemo/grpcsvc"
 	"ire.com/slog"
+	slogpkg "ire.com/slog/pkg"
 )
 
 const (
@@ -17,6 +18,8 @@ const (
 
 func main() {
 	ctx := context.Background()
+
+	slog.SetLogLevel(slogpkg.DebugLevel)
 
 	chErr := runServers(ctx)
 
