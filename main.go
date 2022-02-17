@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	GRPCADDR = "localhost:9090"
+	GRPCADDR = "10.45.69.206:9090"
 	HTTPADDR = ":8080"
 )
 

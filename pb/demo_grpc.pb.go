@@ -23,10 +23,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DemoClient interface {
-	// EnableStorNode is idempotent that means two cases:
+	// UpsertStorNode is idempotent that means two cases:
 	// 1. update it if exists
 	// 2. oterwise create(/insert) it
-	EnableStorNode(ctx context.Context, in *EnableStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpsertStorNode(ctx context.Context, in *UpsertStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Healthz(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthzResponse, error)
 }
 
 type demoClient struct {
@@ -37,9 +38,18 @@ func NewDemoClient(cc grpc.ClientConnInterface) DemoClient {
 	return &demoClient{cc}
 }
 
-func (c *demoClient) EnableStorNode(ctx context.Context, in *EnableStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *demoClient) UpsertStorNode(ctx context.Context, in *UpsertStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/EnableStorNode", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/UpsertStorNode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *demoClient) Healthz(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthzResponse, error) {
+	out := new(HealthzResponse)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/Healthz", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +60,11 @@ func (c *demoClient) EnableStorNode(ctx context.Context, in *EnableStorNodeReque
 // All implementations must embed UnimplementedDemoServer
 // for forward compatibility
 type DemoServer interface {
-	// EnableStorNode is idempotent that means two cases:
+	// UpsertStorNode is idempotent that means two cases:
 	// 1. update it if exists
 	// 2. oterwise create(/insert) it
-	EnableStorNode(context.Context, *EnableStorNodeRequest) (*emptypb.Empty, error)
+	UpsertStorNode(context.Context, *UpsertStorNodeRequest) (*emptypb.Empty, error)
+	Healthz(context.Context, *emptypb.Empty) (*HealthzResponse, error)
 	mustEmbedUnimplementedDemoServer()
 }
 
@@ -61,8 +72,11 @@ type DemoServer interface {
 type UnimplementedDemoServer struct {
 }
 
-func (UnimplementedDemoServer) EnableStorNode(context.Context, *EnableStorNodeRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EnableStorNode not implemented")
+func (UnimplementedDemoServer) UpsertStorNode(context.Context, *UpsertStorNodeRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertStorNode not implemented")
+}
+func (UnimplementedDemoServer) Healthz(context.Context, *emptypb.Empty) (*HealthzResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Healthz not implemented")
 }
 func (UnimplementedDemoServer) mustEmbedUnimplementedDemoServer() {}
 
@@ -77,20 +91,38 @@ func RegisterDemoServer(s grpc.ServiceRegistrar, srv DemoServer) {
 	s.RegisterService(&Demo_ServiceDesc, srv)
 }
 
-func _Demo_EnableStorNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EnableStorNodeRequest)
+func _Demo_UpsertStorNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertStorNodeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DemoServer).EnableStorNode(ctx, in)
+		return srv.(DemoServer).UpsertStorNode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ire.restgwdemo.v1.Demo/EnableStorNode",
+		FullMethod: "/ire.restgwdemo.v1.Demo/UpsertStorNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DemoServer).EnableStorNode(ctx, req.(*EnableStorNodeRequest))
+		return srv.(DemoServer).UpsertStorNode(ctx, req.(*UpsertStorNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Demo_Healthz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DemoServer).Healthz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ire.restgwdemo.v1.Demo/Healthz",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DemoServer).Healthz(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -103,8 +135,12 @@ var Demo_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DemoServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "EnableStorNode",
-			Handler:    _Demo_EnableStorNode_Handler,
+			MethodName: "UpsertStorNode",
+			Handler:    _Demo_UpsertStorNode_Handler,
+		},
+		{
+			MethodName: "Healthz",
+			Handler:    _Demo_Healthz_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

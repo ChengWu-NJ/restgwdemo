@@ -2,6 +2,7 @@
 all:
 	@$(MAKE) --no-print-directory deps
 	@$(MAKE) --no-print-directory protobuf
+	@$(MAKE) --no-print-directory app
 
 .PHONY: deps
 deps:
@@ -26,4 +27,8 @@ protobuf:
 	--grpc-gateway_opt logtostderr=true \
 	--grpc-gateway_opt paths=source_relative \
 	./pb/*.proto
+
+.PHONY: app
+app:
+	go build
 

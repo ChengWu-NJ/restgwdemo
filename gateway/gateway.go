@@ -46,7 +46,7 @@ func Run(ctx context.Context, opts Options) error {
 	if err != nil {
 		return err
 	}
-	slog.Debugf(`conn.GetState() == %s`, conn.GetState())
+	slog.Debugf(`after dial, conn.GetState() == %s`, conn.GetState())
 
 	go func() {
 		<-ctx.Done()
@@ -56,7 +56,7 @@ func Run(ctx context.Context, opts Options) error {
 	}()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", healthzServer(conn))
+	//mux.HandleFunc("/healthz", healthzServer(conn))
 
 	gw, err := newGateway(ctx, conn, opts.Mux)
 	if err != nil {

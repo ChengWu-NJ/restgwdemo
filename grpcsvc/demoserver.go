@@ -2,12 +2,15 @@ package grpcsvc
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/go-pg/pg"
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v10"
+	"github.com/go-pg/pg/v10/orm"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"ire.com/restgwdemo/pb"
+	"ire.com/restgwdemo/pgutils"
 	"ire.com/slog"
 )
 
@@ -31,13 +34,13 @@ func newDemoServer(ctx context.Context) (pb.DemoServer, error) {
 		MinRetryBackoff:       250 * time.Millisecond,
 	})
 
-	defer func() {
-		<-ctx.Done()
+	go func() {
+		defer db.Close()
 
-		db.Close()
+		<-ctx.Done()
 	}()
 
-	if err := _creatTables(db); err != nil {
+	if err := _createSchema(db); err != nil {
 		return nil, err
 	}
 
@@ -47,36 +50,52 @@ func newDemoServer(ctx context.Context) (pb.DemoServer, error) {
 	}, nil
 }
 
-func _creatTables(db *pg.DB) error {
-	if err := db.CreateTable(&pb.StorNode{}, &orm.CreateTableOptions{IfNotExists: true}); err != nil {
-		return err
+func _createSchema(db *pg.DB) error {
+	models := []interface{}{
+		(*pb.StorNode)(nil),
+		//TODO: add others...
 	}
-	//TODO: create others ...
 
+	for _, model := range models {
+		opts := &orm.CreateTableOptions{
+			IfNotExists: true,
+		}
+
+		q := db.Model(model)
+
+		if sqlstr, err := pgutils.CreateTableQueryString(q, opts); err != nil {
+			return err
+		} else {
+			slog.Debugf(`got sql:[%s]`, sqlstr)
+		}
+		
+		err := q.CreateTable(opts)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (s *demoServer) EnableStorNode(ctx context.Context, req *pb.EnableStorNodeRequest) (
+
+func (s *demoServer) UpsertStorNode(ctx context.Context, req *pb.UpsertStorNodeRequest) (
 	*emptypb.Empty, error) {
 
 	//name is unique, so there is just one
-	if r, err := s.DB.QueryOne(&pb.StorNode{}, `select * from stor_nodes where name = ?`,
-		req.StorNode.Name); err != nil {
-
-		//there is none, do insert
-		if r.RowsAffected() == -1 {
-			slog.Debug(`do insert...`)
-
-			//2. oterwise create(/insert) it
-			return nil, s.DB.Insert(req.StorNode)
-		}
-
-		//there is multiple records
-		return nil, err
+	if req == nil || req.StorNode == nil || req.StorNode.Name == "" {
+		return nil, fmt.Errorf(`got an empty request or name`)
 	}
 
-	//1. update it if exists
-	return nil, s.DB.Update(req.StorNode)
+	err := pgutils.Upsert(s.DB, `name`, req.StorNode)
+
+	return nil, err
+}
+
+func (s *demoServer) Healthz(ctx context.Context, emp *emptypb.Empty) (*pb.HealthzResponse, error) {
+	return &pb.HealthzResponse{
+		State: "ok",
+		Htime: timestamppb.Now(),
+	}, nil
 }
 
 /*

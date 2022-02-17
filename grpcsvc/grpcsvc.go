@@ -36,5 +36,7 @@ func Run(ctx context.Context, network, address string) error {
 		defer s.GracefulStop()
 		<-ctx.Done()
 	}()
+
+	slog.Debug(`grpc starting to serve...`)
 	return s.Serve(l)
 }
