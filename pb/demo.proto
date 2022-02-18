@@ -29,13 +29,16 @@ message StorNode {
 
   int64 buyNanoTime = 6;
 
-  // @gotags: pg:",type:timestamptz,default:now()"
-  google.protobuf.Timestamp updateTime = 7;
+  // @gotags: pg:",type:timestamptz"
+  google.protobuf.Timestamp buyTimeStamp = 7;
 
-  bool boolField = 8;
+  // @gotags: pg:",type:timestamptz,default:now()"
+  google.protobuf.Timestamp updateTime = 8;
+
+  bool boolField = 9;
 
   // @gotags: pg:"-"
-  bool notMap2Orm = 9;
+  bool notMap2Orm = 10;
 }
 
 message UpsertStorNodeRequest {

@@ -3,15 +3,15 @@ package pgutils
 import (
 	"fmt"
 
-	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
+	"ire.com/pg"
+	"ire.com/pg/orm"
 	"ire.com/slog"
 )
 
 func Upsert(db *pg.DB, ukeyField string, modelInstance interface{}) error {
 	var (
 		sqlstr string
-		err error
+		err    error
 	)
 	defer func() {
 		slog.Debugf(`Upsert got err:[%+v], sql:[%s]`, err, sqlstr)

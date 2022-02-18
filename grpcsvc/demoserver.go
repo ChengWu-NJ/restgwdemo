@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"ire.com/pg"
+	"ire.com/pg/orm"
 	"ire.com/restgwdemo/pb"
 	"ire.com/restgwdemo/pgutils"
 	"ire.com/slog"
@@ -68,7 +68,7 @@ func _createSchema(db *pg.DB) error {
 		} else {
 			slog.Debugf(`got sql:[%s]`, sqlstr)
 		}
-		
+
 		err := q.CreateTable(opts)
 		if err != nil {
 			return err
@@ -76,7 +76,6 @@ func _createSchema(db *pg.DB) error {
 	}
 	return nil
 }
-
 
 func (s *demoServer) UpsertStorNode(ctx context.Context, req *pb.UpsertStorNodeRequest) (
 	*emptypb.Empty, error) {
