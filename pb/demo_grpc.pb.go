@@ -23,11 +23,16 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DemoClient interface {
+	Healthz(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthzResponse, error)
 	// UpsertStorNode is idempotent that means two cases:
 	// 1. update it if exists
 	// 2. oterwise create(/insert) it
 	UpsertStorNode(ctx context.Context, in *UpsertStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Healthz(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthzResponse, error)
+	GetStorNodeByName(ctx context.Context, in *GetStorNodeByNameRequest, opts ...grpc.CallOption) (*GetStorNodeByNameResponse, error)
+	DelStorNodeByName(ctx context.Context, in *DelStorNodeByNameRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpsertVG(ctx context.Context, in *UpsertVGRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetVGById(ctx context.Context, in *GetVGByIdRequest, opts ...grpc.CallOption) (*GetVGByIdResponse, error)
+	DelVGById(ctx context.Context, in *DelVGByIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type demoClient struct {
@@ -36,15 +41,6 @@ type demoClient struct {
 
 func NewDemoClient(cc grpc.ClientConnInterface) DemoClient {
 	return &demoClient{cc}
-}
-
-func (c *demoClient) UpsertStorNode(ctx context.Context, in *UpsertStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/UpsertStorNode", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *demoClient) Healthz(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthzResponse, error) {
@@ -56,15 +52,74 @@ func (c *demoClient) Healthz(ctx context.Context, in *emptypb.Empty, opts ...grp
 	return out, nil
 }
 
+func (c *demoClient) UpsertStorNode(ctx context.Context, in *UpsertStorNodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/UpsertStorNode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *demoClient) GetStorNodeByName(ctx context.Context, in *GetStorNodeByNameRequest, opts ...grpc.CallOption) (*GetStorNodeByNameResponse, error) {
+	out := new(GetStorNodeByNameResponse)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/GetStorNodeByName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *demoClient) DelStorNodeByName(ctx context.Context, in *DelStorNodeByNameRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/DelStorNodeByName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *demoClient) UpsertVG(ctx context.Context, in *UpsertVGRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/UpsertVG", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *demoClient) GetVGById(ctx context.Context, in *GetVGByIdRequest, opts ...grpc.CallOption) (*GetVGByIdResponse, error) {
+	out := new(GetVGByIdResponse)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/GetVGById", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *demoClient) DelVGById(ctx context.Context, in *DelVGByIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/ire.restgwdemo.v1.Demo/DelVGById", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DemoServer is the server API for Demo service.
 // All implementations must embed UnimplementedDemoServer
 // for forward compatibility
 type DemoServer interface {
+	Healthz(context.Context, *emptypb.Empty) (*HealthzResponse, error)
 	// UpsertStorNode is idempotent that means two cases:
 	// 1. update it if exists
 	// 2. oterwise create(/insert) it
 	UpsertStorNode(context.Context, *UpsertStorNodeRequest) (*emptypb.Empty, error)
-	Healthz(context.Context, *emptypb.Empty) (*HealthzResponse, error)
+	GetStorNodeByName(context.Context, *GetStorNodeByNameRequest) (*GetStorNodeByNameResponse, error)
+	DelStorNodeByName(context.Context, *DelStorNodeByNameRequest) (*emptypb.Empty, error)
+	UpsertVG(context.Context, *UpsertVGRequest) (*emptypb.Empty, error)
+	GetVGById(context.Context, *GetVGByIdRequest) (*GetVGByIdResponse, error)
+	DelVGById(context.Context, *DelVGByIdRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedDemoServer()
 }
 
@@ -72,11 +127,26 @@ type DemoServer interface {
 type UnimplementedDemoServer struct {
 }
 
+func (UnimplementedDemoServer) Healthz(context.Context, *emptypb.Empty) (*HealthzResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Healthz not implemented")
+}
 func (UnimplementedDemoServer) UpsertStorNode(context.Context, *UpsertStorNodeRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertStorNode not implemented")
 }
-func (UnimplementedDemoServer) Healthz(context.Context, *emptypb.Empty) (*HealthzResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Healthz not implemented")
+func (UnimplementedDemoServer) GetStorNodeByName(context.Context, *GetStorNodeByNameRequest) (*GetStorNodeByNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStorNodeByName not implemented")
+}
+func (UnimplementedDemoServer) DelStorNodeByName(context.Context, *DelStorNodeByNameRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelStorNodeByName not implemented")
+}
+func (UnimplementedDemoServer) UpsertVG(context.Context, *UpsertVGRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertVG not implemented")
+}
+func (UnimplementedDemoServer) GetVGById(context.Context, *GetVGByIdRequest) (*GetVGByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVGById not implemented")
+}
+func (UnimplementedDemoServer) DelVGById(context.Context, *DelVGByIdRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelVGById not implemented")
 }
 func (UnimplementedDemoServer) mustEmbedUnimplementedDemoServer() {}
 
@@ -89,24 +159,6 @@ type UnsafeDemoServer interface {
 
 func RegisterDemoServer(s grpc.ServiceRegistrar, srv DemoServer) {
 	s.RegisterService(&Demo_ServiceDesc, srv)
-}
-
-func _Demo_UpsertStorNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertStorNodeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DemoServer).UpsertStorNode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ire.restgwdemo.v1.Demo/UpsertStorNode",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DemoServer).UpsertStorNode(ctx, req.(*UpsertStorNodeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Demo_Healthz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -127,6 +179,114 @@ func _Demo_Healthz_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Demo_UpsertStorNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertStorNodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DemoServer).UpsertStorNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ire.restgwdemo.v1.Demo/UpsertStorNode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DemoServer).UpsertStorNode(ctx, req.(*UpsertStorNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Demo_GetStorNodeByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStorNodeByNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DemoServer).GetStorNodeByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ire.restgwdemo.v1.Demo/GetStorNodeByName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DemoServer).GetStorNodeByName(ctx, req.(*GetStorNodeByNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Demo_DelStorNodeByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelStorNodeByNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DemoServer).DelStorNodeByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ire.restgwdemo.v1.Demo/DelStorNodeByName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DemoServer).DelStorNodeByName(ctx, req.(*DelStorNodeByNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Demo_UpsertVG_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertVGRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DemoServer).UpsertVG(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ire.restgwdemo.v1.Demo/UpsertVG",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DemoServer).UpsertVG(ctx, req.(*UpsertVGRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Demo_GetVGById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVGByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DemoServer).GetVGById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ire.restgwdemo.v1.Demo/GetVGById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DemoServer).GetVGById(ctx, req.(*GetVGByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Demo_DelVGById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelVGByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DemoServer).DelVGById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ire.restgwdemo.v1.Demo/DelVGById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DemoServer).DelVGById(ctx, req.(*DelVGByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Demo_ServiceDesc is the grpc.ServiceDesc for Demo service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -135,12 +295,32 @@ var Demo_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DemoServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Healthz",
+			Handler:    _Demo_Healthz_Handler,
+		},
+		{
 			MethodName: "UpsertStorNode",
 			Handler:    _Demo_UpsertStorNode_Handler,
 		},
 		{
-			MethodName: "Healthz",
-			Handler:    _Demo_Healthz_Handler,
+			MethodName: "GetStorNodeByName",
+			Handler:    _Demo_GetStorNodeByName_Handler,
+		},
+		{
+			MethodName: "DelStorNodeByName",
+			Handler:    _Demo_DelStorNodeByName_Handler,
+		},
+		{
+			MethodName: "UpsertVG",
+			Handler:    _Demo_UpsertVG_Handler,
+		},
+		{
+			MethodName: "GetVGById",
+			Handler:    _Demo_GetVGById_Handler,
+		},
+		{
+			MethodName: "DelVGById",
+			Handler:    _Demo_DelVGById_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

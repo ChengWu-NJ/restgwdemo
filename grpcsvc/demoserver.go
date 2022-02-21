@@ -53,12 +53,14 @@ func newDemoServer(ctx context.Context) (pb.DemoServer, error) {
 func _createSchema(db *pg.DB) error {
 	models := []interface{}{
 		(*pb.StorNode)(nil),
+		(*pb.VG)(nil),
 		//TODO: add others...
 	}
 
 	for _, model := range models {
 		opts := &orm.CreateTableOptions{
 			IfNotExists: true,
+			FKConstraints: true,
 		}
 
 		q := db.Model(model)
@@ -80,14 +82,46 @@ func _createSchema(db *pg.DB) error {
 func (s *demoServer) UpsertStorNode(ctx context.Context, req *pb.UpsertStorNodeRequest) (
 	*emptypb.Empty, error) {
 
-	//name is unique, so there is just one
 	if req == nil || req.StorNode == nil || req.StorNode.Name == "" {
-		return nil, fmt.Errorf(`got an empty request or name`)
+		return &emptypb.Empty{}, fmt.Errorf(`got an empty request or name`)
 	}
 
 	err := pgutils.Upsert(s.DB, `name`, req.StorNode)
 
-	return nil, err
+	return &emptypb.Empty{}, err
+}
+
+func (s *demoServer) GetStorNodeByName(ctx context.Context, req *pb.GetStorNodeByNameRequest) (
+	*pb.GetStorNodeByNameResponse, error) {
+
+	if req == nil || req.Name == "" {
+		return &pb.GetStorNodeByNameResponse{}, fmt.Errorf(`got an empty request or name`)
+	}
+
+	storNode := &pb.StorNode{
+		Name: req.Name,
+	}
+
+	err := pgutils.SelectOneByKey(s.DB, storNode)
+
+	return &pb.GetStorNodeByNameResponse{StorNode: storNode}, err
+}
+
+func (s *demoServer) DelStorNodeByName(ctx context.Context, req *pb.DelStorNodeByNameRequest) (
+	*emptypb.Empty, error) {
+
+	if req == nil || req.Name == "" {
+		return &emptypb.Empty{}, fmt.Errorf(`got an empty request or name`)
+	}	
+
+	storNode := &pb.StorNode{
+		Name: req.Name,
+	}
+
+	err := pgutils.DeleteOneByKey(s.DB, storNode)
+
+	return  &emptypb.Empty{}, err
+
 }
 
 func (s *demoServer) Healthz(ctx context.Context, emp *emptypb.Empty) (*pb.HealthzResponse, error) {
@@ -97,101 +131,48 @@ func (s *demoServer) Healthz(ctx context.Context, emp *emptypb.Empty) (*pb.Healt
 	}, nil
 }
 
-/*
-func (s *demoServer) BulkUpload(stream pb.Demo_BulkUploadServer) error {
-	ctx := stream.Context()
-
-	msgs := make([]string, 0)
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-
-		case <-s.ctx.Done():
-			return s.ctx.Err()
-
-		default:
-		}
-
-		req, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		if req == nil || req.InMsg == "" {
-			continue
-		}
-
-		msgs = append(msgs, req.InMsg)
+func (s *demoServer) UpsertVG(ctx context.Context, req *pb.UpsertVGRequest) (*emptypb.Empty, error) {
+	if req == nil || req.Vg == nil || req.Vg.VgId == "" {
+		return &emptypb.Empty{}, fmt.Errorf(`got an empty request or vgId`)
 	}
 
-	slog.Infof(`BulkUpload got %v`, msgs)
+	if req.Vg.StorNodeName == "" {
+		return &emptypb.Empty{}, fmt.Errorf(`got an empty storNodeName`)
+	}
 
-	return nil
+	err := pgutils.Upsert(s.DB, `vg_id`, req.Vg)
+
+	return &emptypb.Empty{}, err
 }
 
-func (s *demoServer) BulkDownload(req *pb.Request, stream pb.Demo_BulkDownloadServer) error {
-	if req == nil || req.InMsg == "" {
-		return fmt.Errorf(`got an requset with empty message`)
+
+func (s *demoServer) GetVGById(ctx context.Context, req *pb.GetVGByIdRequest) (
+	*pb.GetVGByIdResponse, error) {
+
+	if req == nil || req.VgId == "" {
+		return &pb.GetVGByIdResponse{}, fmt.Errorf(`got an empty request or vgId`)
 	}
 
-	ctx := stream.Context()
-	for i := 0; i < 5; i++ {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-
-		case <-s.ctx.Done():
-			return s.ctx.Err()
-
-		default:
-		}
-
-		if err := stream.Send(&pb.Response{
-			OutMsg: fmt.Sprintf(`No.%d response to %s`, i, req.InMsg),
-		}); err != nil {
-			return err
-		}
+	vg := &pb.VG{
+		VgId: req.VgId,
 	}
 
-	return nil
+	err := pgutils.SelectOneByKey(s.DB, vg)
+
+	return &pb.GetVGByIdResponse{Vg: vg}, err	
 }
 
-func (s *demoServer) DoubleStream(stream pb.Demo_DoubleStreamServer) error {
-	ctx := stream.Context()
+func (s *demoServer) DelVGById(ctx context.Context, req *pb.DelVGByIdRequest) (*emptypb.Empty, error) {
 
-	i := 0
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-
-		case <-s.ctx.Done():
-			return s.ctx.Err()
-
-		default:
-		}
-
-		req, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		if req == nil || req.InMsg == "" {
-			continue
-		}
-
-		_ = stream.Send(&pb.Response{OutMsg: fmt.Sprintf(`I got your No.%d message:[%s]`,
-			i, req.InMsg)})
-		i++
+	if req == nil || req.VgId == "" {
+		return &emptypb.Empty{}, fmt.Errorf(`got an empty request or vgId`)
 	}
 
-	return nil
+	vg := &pb.VG{
+		VgId: req.VgId,
+	}
+
+	err := pgutils.DeleteOneByKey(s.DB, vg)
+
+	return &emptypb.Empty{}, err
 }
-*/

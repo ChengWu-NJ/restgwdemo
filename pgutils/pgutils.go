@@ -29,6 +29,48 @@ func Upsert(db *pg.DB, ukeyField string, modelInstance interface{}) error {
 	return err
 }
 
+func SelectOneByKey(db *pg.DB, modelInstanceWithKey interface{}) error {
+	var (
+		sqlstr string
+		err    error
+	)
+	defer func() {
+		slog.Debugf(`SelectOneByKey got err:[%+v], sql:[%s]`, err, sqlstr)
+	}()
+
+	q := db.Model(modelInstanceWithKey).WherePK()
+	
+	sqlstr, err = SelectQueryString(q)
+	if err != nil {
+		return err
+	}
+
+	err = q.Select()
+
+	return err
+}
+
+func DeleteOneByKey(db *pg.DB, modelInstanceWithKey interface{}) error {
+	var (
+		sqlstr string
+		err    error
+	)
+	defer func() {
+		slog.Debugf(`DeleteOneByKey got err:[%+v], sql:[%s]`, err, sqlstr)
+	}()
+
+	q := db.Model(modelInstanceWithKey).WherePK()
+	
+	sqlstr, err = DeleteQueryString(q)
+	if err != nil {
+		return err
+	}
+
+	_, err = q.Delete()
+
+	return err
+}
+
 func CreateTableQueryString(q *orm.Query, opt *orm.CreateTableOptions) (string, error) {
 	qq := orm.NewCreateTableQuery(q, opt)
 	return queryString(qq)
@@ -41,6 +83,11 @@ func SelectQueryString(q *orm.Query) (string, error) {
 
 func InsertQueryString(q *orm.Query) (string, error) {
 	qq := orm.NewInsertQuery(q)
+	return queryString(qq)
+}
+
+func DeleteQueryString(q *orm.Query) (string, error) {
+	qq := orm.NewDeleteQuery(q)
 	return queryString(qq)
 }
 
