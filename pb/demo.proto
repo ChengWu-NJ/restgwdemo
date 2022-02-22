@@ -110,7 +110,7 @@ message VG {
   string vgId = 1;
 
   string storNodeName = 2;
-  // @gotags: pg:",rel:has-one"
+  // @gotags: pg:",rel:has-one,fk:stor_node_name"
   StorNode storNode = 99;
 
   // unqique on storhost, which is the real vg name

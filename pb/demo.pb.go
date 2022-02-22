@@ -205,8 +205,8 @@ type VG struct {
 	// @gotags: pg:",pk"
 	VgId         string `protobuf:"bytes,1,opt,name=vgId,proto3" json:"vgId,omitempty" pg:",pk"`
 	StorNodeName string `protobuf:"bytes,2,opt,name=storNodeName,proto3" json:"storNodeName,omitempty"`
-	// @gotags: pg:",rel:has-one"
-	StorNode *StorNode `protobuf:"bytes,99,opt,name=storNode,proto3" json:"storNode,omitempty" pg:",rel:has-one"`
+	// @gotags: pg:",rel:has-one,fk:stor_node_name"
+	StorNode *StorNode `protobuf:"bytes,99,opt,name=storNode,proto3" json:"storNode,omitempty" pg:",rel:has-one,fk:stor_node_name"`
 	// unqique on storhost, which is the real vg name
 	VgName      string `protobuf:"bytes,3,opt,name=vgName,proto3" json:"vgName,omitempty"`
 	VgTotalSize int64  `protobuf:"varint,4,opt,name=vgTotalSize,proto3" json:"vgTotalSize,omitempty"`
