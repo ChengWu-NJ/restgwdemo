@@ -49,7 +49,9 @@ func runServers(ctx context.Context) <-chan error {
 				Addr:    GRPCADDR,
 			},
 		}
-		if err := gateway.Run(ctx, opts); err != nil {
+
+		//run with basic authenticate --- user / pass method
+		if err := gateway.Run(ctx, opts, true); err != nil {
 			ch <- fmt.Errorf("cannot run gateway service: %v", err)
 		}
 	}()

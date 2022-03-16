@@ -11,7 +11,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
 	"ire.com/restgwdemo/pb"
 
 	"ire.com/slog"
@@ -36,6 +35,25 @@ type Options struct {
 	Mux []gwruntime.ServeMuxOption
 }
 
+// TODO ...
+// https://github.com/shaj13/go-guardian/blob/master/_examples/token/main.go
+
+var (
+
+
+	/*
+	basicAuthMiddleware = func(handle http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			user, pass, ok := req.BasicAuth()
+			if !ok || !checkBasicAuth(user, pass) {
+				http.Error(w, "Unauthorized.", 401)
+				return
+			}
+			handle.ServeHTTP(w, req)
+		})
+	}*/
+)
+
 // Run starts a HTTP server and blocks while running if successful.
 // The server will be shutdown when "ctx" is canceled.
 func Run(ctx context.Context, opts Options) error {
@@ -56,13 +74,17 @@ func Run(ctx context.Context, opts Options) error {
 	}()
 
 	mux := http.NewServeMux()
-	//mux.HandleFunc("/healthz", healthzServer(conn))
 
 	gw, err := newGateway(ctx, conn, opts.Mux)
 	if err != nil {
 		return err
 	}
-	mux.Handle("/", gw)
+
+	//if isBasicAuth {
+	//	mux.Handle("/", basicAuthMiddleware(gw))
+	//} else {
+		mux.Handle("/", gw)
+	//}
 
 	s := &http.Server{
 		Addr:    opts.Addr,
@@ -127,14 +149,7 @@ func dialUnix(ctx context.Context, addr string) (*grpc.ClientConn, error) {
 	return grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithContextDialer(d))
 }
 
-// healthzServer returns a simple health handler which returns ok.
-func healthzServer(conn *grpc.ClientConn) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		if s := conn.GetState(); s != connectivity.Ready && s != connectivity.Idle {
-			http.Error(w, fmt.Sprintf("grpc server is %s", s), http.StatusBadGateway)
-			return
-		}
-		fmt.Fprintln(w, "ok")
-	}
+func checkBasicAuth(user, pass string) bool {
+	//TODO ...
+	return true
 }
