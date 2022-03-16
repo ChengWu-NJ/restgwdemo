@@ -1,0 +1,434 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "demo.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Demo"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/DelStorNodeByName": {
+      "post": {
+        "operationId": "Demo_DelStorNodeByName",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DelStorNodeByNameRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/v1/DelVGById": {
+      "post": {
+        "operationId": "Demo_DelVGById",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DelVGByIdRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/v1/GetStorNodeByName": {
+      "post": {
+        "operationId": "Demo_GetStorNodeByName",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetStorNodeByNameResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetStorNodeByNameRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/v1/GetVGById": {
+      "post": {
+        "operationId": "Demo_GetVGById",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetVGByIdResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetVGByIdRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/v1/UpsertStorNode": {
+      "post": {
+        "summary": "UpsertStorNode is idempotent that means two cases:\n1. update it if exists\n2. oterwise create(/insert) it",
+        "operationId": "Demo_UpsertStorNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertStorNodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/v1/UpsertVG": {
+      "post": {
+        "operationId": "Demo_UpsertVG",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertVGRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Demo"
+        ]
+      }
+    },
+    "/v1/healthz": {
+      "post": {
+        "operationId": "Demo_Healthz",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HealthzResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Demo"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1DelStorNodeByNameRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DelVGByIdRequest": {
+      "type": "object",
+      "properties": {
+        "vgId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetStorNodeByNameRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetStorNodeByNameResponse": {
+      "type": "object",
+      "properties": {
+        "storNode": {
+          "$ref": "#/definitions/v1StorNode"
+        }
+      }
+    },
+    "v1GetVGByIdRequest": {
+      "type": "object",
+      "properties": {
+        "vgId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetVGByIdResponse": {
+      "type": "object",
+      "properties": {
+        "vg": {
+          "$ref": "#/definitions/v1VG"
+        }
+      }
+    },
+    "v1HealthzResponse": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "htime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1StorNode": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "@gotags: pg:\",pk\""
+        },
+        "ip": {
+          "type": "string"
+        },
+        "otherIps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "@gotags: pg:\",array\""
+        },
+        "attributions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "@gotags: pg:\",hstore\""
+        },
+        "buyNanoTime": {
+          "type": "string",
+          "format": "int64",
+          "title": "@gotags: pg:\",notnull\""
+        },
+        "buyTimeStamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "@gotags: pg:\",type:timestamptz\""
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "@gotags: pg:\",type:timestamptz,default:now()\""
+        },
+        "boolField": {
+          "type": "boolean"
+        },
+        "testSequence": {
+          "type": "string",
+          "format": "int64",
+          "title": "@gotags: pg:\",type:bigserial\""
+        },
+        "notMap2Orm": {
+          "type": "boolean",
+          "title": "@gotags: pg:\"-\""
+        }
+      }
+    },
+    "v1UpsertStorNodeRequest": {
+      "type": "object",
+      "properties": {
+        "storNode": {
+          "$ref": "#/definitions/v1StorNode",
+          "title": "don't input testSequence and let pg bigserial type to work"
+        }
+      }
+    },
+    "v1UpsertVGRequest": {
+      "type": "object",
+      "properties": {
+        "vg": {
+          "$ref": "#/definitions/v1VG"
+        }
+      }
+    },
+    "v1VG": {
+      "type": "object",
+      "properties": {
+        "vgId": {
+          "type": "string",
+          "title": "unique globally. always be overwrite to be {stor_hostname}_{vg_name}\n@gotags: pg:\",pk\""
+        },
+        "storNodeName": {
+          "type": "string"
+        },
+        "storNode": {
+          "$ref": "#/definitions/v1StorNode",
+          "title": "@gotags: pg:\",rel:has-one,fk:stor_node_name\""
+        },
+        "vgName": {
+          "type": "string",
+          "title": "unqique on storhost, which is the real vg name"
+        },
+        "vgTotalSize": {
+          "type": "string",
+          "format": "int64"
+        },
+        "vgType": {
+          "$ref": "#/definitions/v1VGType"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "@gotags: pg:\",type:timestamptz,default:now()\""
+        }
+      }
+    },
+    "v1VGType": {
+      "type": "string",
+      "enum": [
+        "VG_TYPE_NORMAL",
+        "VG_TYPE_FAST"
+      ],
+      "default": "VG_TYPE_NORMAL"
+    }
+  }
+}
