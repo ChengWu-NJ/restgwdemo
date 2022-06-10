@@ -189,12 +189,13 @@ func RegisterDemoHandlerServer(ctx context.Context, mux *runtime.ServeMux, serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/UnaryDemo", runtime.WithHTTPPathPattern("/v1/unarydemo"))
+		var err error
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/UnaryDemo", runtime.WithHTTPPathPattern("/v1/unarydemo"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Demo_UnaryDemo_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Demo_UnaryDemo_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -272,12 +273,13 @@ func RegisterDemoHandlerClient(ctx context.Context, mux *runtime.ServeMux, clien
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/UnaryDemo", runtime.WithHTTPPathPattern("/v1/unarydemo"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/UnaryDemo", runtime.WithHTTPPathPattern("/v1/unarydemo"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Demo_UnaryDemo_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Demo_UnaryDemo_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -292,12 +294,13 @@ func RegisterDemoHandlerClient(ctx context.Context, mux *runtime.ServeMux, clien
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/BulkUpload", runtime.WithHTTPPathPattern("/v1/bulkupload"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/BulkUpload", runtime.WithHTTPPathPattern("/v1/bulkupload"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Demo_BulkUpload_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Demo_BulkUpload_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -312,12 +315,13 @@ func RegisterDemoHandlerClient(ctx context.Context, mux *runtime.ServeMux, clien
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/BulkDownload", runtime.WithHTTPPathPattern("/v1/bulkdownload"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/BulkDownload", runtime.WithHTTPPathPattern("/v1/bulkdownload"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Demo_BulkDownload_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Demo_BulkDownload_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -332,12 +336,13 @@ func RegisterDemoHandlerClient(ctx context.Context, mux *runtime.ServeMux, clien
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/DoubleStream", runtime.WithHTTPPathPattern("/v1/doublestream"))
+		var err error
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/ire.restgwdemo.v1.Demo/DoubleStream", runtime.WithHTTPPathPattern("/v1/doublestream"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Demo_DoubleStream_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Demo_DoubleStream_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)

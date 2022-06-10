@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
+	"github.com/felixge/httpsnoop"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
@@ -16,6 +19,12 @@ import (
 
 	"ire.com/slog"
 )
+
+const (
+	EXEMPT_SECONDS_AFTER_CHECK_PASSWORD = 60
+)
+
+var rightAuthenticationStrings = make(map[string]time.Time)
 
 //please go to "THE CUSTOMIZED PART" to registry grpc service
 
@@ -63,8 +72,9 @@ func Run(ctx context.Context, opts Options) error {
 	mux.Handle("/", gw)
 
 	s := &http.Server{
-		Addr:    opts.Addr,
-		Handler: mux,
+		Addr: opts.Addr,
+		// add authentication and logger for restful access
+		Handler: withAuthAndLogger(mux),
 	}
 	go func() {
 		<-ctx.Done()
@@ -84,6 +94,15 @@ func Run(ctx context.Context, opts Options) error {
 
 // newGateway returns a new gateway server which translates HTTP into gRPC.
 func newGateway(ctx context.Context, conn *grpc.ClientConn, opts []gwruntime.ServeMuxOption) (http.Handler, error) {
+	// add Authentication ...
+	opts = append(opts,
+		gwruntime.WithMetadata(func(ctx context.Context, request *http.Request) metadata.MD {
+			header := request.Header.Get("Authorization")
+			// send all the headers received from the client
+			md := metadata.Pairs("auth", header)
+			return md
+		}),
+	)
 
 	mux := gwruntime.NewServeMux(opts...)
 
@@ -135,4 +154,50 @@ func healthzServer(conn *grpc.ClientConn) http.HandlerFunc {
 		}
 		fmt.Fprintln(w, "ok")
 	}
+}
+
+func withAuthAndLogger(handler http.Handler) http.Handler {
+	// the create a handler
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+
+		if !canExemptCheckPassword(request) {
+			username, password, ok := request.BasicAuth()
+			if !ok || !checkUsernameAndPassword(username, password) {
+				writer.Header().Set("WWW-Authenticate", `Basic realm="Please enter your username and password"`)
+				writer.WriteHeader(401)
+				_, _ = writer.Write([]byte("Unauthorised.\n"))
+				return
+			}
+
+			rightAuthenticationStrings[request.Header.Get("Authorization")+string(net.ParseIP(request.RemoteAddr))] = time.Now()
+		}
+
+		// pass the handler to httpsnoop to get http status and latency
+		m := httpsnoop.CaptureMetrics(handler, writer, request)
+
+		// printing exracted data
+		slog.Infof("from:[%s], http[%d]-- %s -- %s\n", request.RemoteAddr, m.Code, m.Duration, request.URL.Path)
+	})
+}
+
+// canExemptCheckPassword is for reducing to invoke checkUsernameAndPassword
+// which will actually invoke a backend authentication service
+func canExemptCheckPassword(request *http.Request) bool {
+	authStr := request.Header.Get("Authorization") + string(net.ParseIP(request.RemoteAddr))
+	checkTime, ok := rightAuthenticationStrings[authStr]
+	if !ok {
+		return false
+	}
+
+	if checkTime.Add(EXEMPT_SECONDS_AFTER_CHECK_PASSWORD * time.Second).Before(time.Now()) {
+		return false
+	}
+
+	return true
+}
+
+func checkUsernameAndPassword(username, password string) bool {
+	// TODO...
+	slog.Info("invoke some authentication service...")
+	return username == "testuser" && password == "testpass"
 }
